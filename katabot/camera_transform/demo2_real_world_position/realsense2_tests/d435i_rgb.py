@@ -6,8 +6,8 @@ import cv2
 pipeline = rs.pipeline()
 config = rs.config()
 
-# 2. 配置分辨率为1280x720，帧率30fps
-config.enable_stream(rs.stream.color, 1280, 720, rs.format.bgr8, 30)
+# 2. 配置分辨率为1280x720，帧率15fps
+config.enable_stream(rs.stream.color, 1280, 720, rs.format.bgr8, 15)
 
 # 3. 启动流
 profile = pipeline.start(config)

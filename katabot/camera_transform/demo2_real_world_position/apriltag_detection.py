@@ -1,7 +1,12 @@
 import cv2
 import numpy as np
-from katabot.camera_transform.demo2_real_world_position import D435iCamera
+# from katabot.camera_transform.demo2_real_world_position import D435iCamera as Camera
+from katabot.camera_transform.demo2_real_world_position import D435Camera as Camera
 from pupil_apriltags import Detector, Detection
+
+special_tag_size = {
+    11: 0.05
+}
 
 def get_extrinsics_matrix_pnp(xs_img: np.ndarray, xs_world: np.ndarray, K: np.ndarray, dist=None):
     """ Give one-to-one N (N >= 4) points in world and image coordinate systems, return world coor-sys to camera coor-sys.
@@ -40,6 +45,7 @@ class AprilTagDetection:
             xs_world = []
             for idx, corner in enumerate(tag.corners):
                 x_img = corner.copy()
+                ts = tag_size if tag.tag_id not in special_tag_size else special_tag_size[tag.tag_id]
                 x_world = np.array(self.corner_world_ratio_pos[idx], np.float32) * tag_size
                 xs_img.append(x_img)
                 xs_world.append(x_world)
@@ -66,7 +72,7 @@ class AprilTagDetection:
                     print(f"[WARNING]: Exist {len(tag_infos[id])}-multiple tag_{id=}")
         return tag_infos
     
-    def draw_detected_corners(self, rgb_img, K=None, dist=None, tag_size=0.04, verbose=False):
+    def draw_detected_corners(self, rgb_img, K=None, dist=None, tag_size=0.04, verbose=False, draw_text=True):
         img = rgb_img.copy()
         tag_infos = self.detect(img, K, dist, tag_size, verbose)
 
@@ -78,13 +84,14 @@ class AprilTagDetection:
                     corner = corner.astype(np.int32)
                     cv2.circle(img, corner, 5, colors[idx], -1)
                 text_org = np.mean(info['corners'], axis=0).astype(np.int32)
-                cv2.putText(img, f"Tag{id}", text_org, cv2.FONT_HERSHEY_COMPLEX, 1, (0,0,255), thickness=2)
+                if draw_text:
+                    cv2.putText(img, f"Tag{id}", text_org, cv2.FONT_HERSHEY_COMPLEX, 1, (0,0,255), thickness=2)
         
         return img, tag_infos
 
 def debug_draw_corner_detect():
     april_tag_detection = AprilTagDetection()
-    camera = D435iCamera()
+    camera = Camera()
     while True:
         rgb_img, depth_img = camera.get_frame()
         corners_img = april_tag_detection.draw_detected_corners(rgb_img)
@@ -95,7 +102,7 @@ def debug_draw_corner_detect():
 def debug_detect_and_draw_axis():
     axis_colors = [(0,0,255), (0,255,0), (255,0,0)]
     april_tag_detection = AprilTagDetection()
-    camera = D435iCamera()
+    camera = Camera()
     while True:
         rgb_img, depth_img = camera.get_frame()
         img, tag_infos = april_tag_detection.draw_detected_corners(
