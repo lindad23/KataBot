@@ -7,6 +7,7 @@ import pyqtgraph as pg
 
 # 创建应用
 app = QApplication(sys.argv)
+print(sys.argv)
 view = gl.GLViewWidget()
 view.setWindowTitle('3D Coordinate Axes with Moving Point')
 view.setGeometry(100, 100, 800, 600)
@@ -46,6 +47,20 @@ def update():
 timer = QTimer()
 timer.timeout.connect(update)
 timer.start(30)
+
+visible = True
+# 每秒切换可见状态
+def toggle_visibility():
+    global visible
+    if visible:
+        view.removeItem(moving_point)
+    else:
+        view.addItem(moving_point)
+    visible = not visible
+
+visibility_timer = QTimer()
+visibility_timer.timeout.connect(toggle_visibility)
+visibility_timer.start(1000)
 
 # 运行应用
 sys.exit(app.exec_())

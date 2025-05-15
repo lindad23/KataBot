@@ -34,6 +34,7 @@ try:
         # 转换为 NumPy 数组
         color_image = np.asanyarray(color_frame.get_data())
         depth_image = np.asanyarray(depth_frame.get_data())
+        print(depth_image)
 
         # 归一化深度图以增强可视化效果
         depth_normalized = cv2.normalize(depth_image, None, 0, 255, cv2.NORM_MINMAX)
