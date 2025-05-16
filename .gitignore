@@ -3,3 +3,7 @@ __pycache__
 test*
 debug*
 logs
+
+# ROS
+build
+devel
