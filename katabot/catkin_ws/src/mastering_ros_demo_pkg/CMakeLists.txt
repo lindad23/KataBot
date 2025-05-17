@@ -12,6 +12,7 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib_msgs
   roscpp
   std_msgs
+  message_generation
 )
 
 ## System dependencies are found with CMake's conventions
@@ -48,31 +49,29 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
-#   Message2.msg
-# )
+add_message_files(
+  FILES
+  demo_msg.msg
+)
 
 ## Generate services in the 'srv' folder
-# add_service_files(
-#   FILES
-#   Service1.srv
-#   Service2.srv
-# )
+add_service_files(
+  FILES
+  demo_srv.srv
+)
 
 ## Generate actions in the 'action' folder
-# add_action_files(
-#   FILES
-#   Action1.action
-#   Action2.action
-# )
+add_action_files(
+  FILES
+  demo_action.action
+)
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   actionlib_msgs#   std_msgs
-# )
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+  actionlib_msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -134,8 +133,14 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(demo_topic_publisher src/demo_topic_publisher.cpp)
-add_executable(demo_topic_subscriber src/demo_topic_subscriber.cpp)
+add_executable(demo_topic_publisher src/topic/demo_topic_publisher.cpp)
+add_executable(demo_topic_subscriber src/topic/demo_topic_subscriber.cpp)
+add_executable(demo_msg_publisher src/msg/demo_msg_publisher.cpp)
+add_executable(demo_msg_subscriber src/msg/demo_msg_subscriber.cpp)
+add_executable(demo_service_server src/srv/demo_service_server.cpp)
+add_executable(demo_service_client src/srv/demo_service_client.cpp)
+add_executable(demo_action_server src/action/demo_action_server.cpp)
+add_executable(demo_action_client src/action/demo_action_client.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -150,6 +155,12 @@ add_executable(demo_topic_subscriber src/demo_topic_subscriber.cpp)
 ## Specify libraries to link a library or executable target against
 target_link_libraries(demo_topic_publisher ${catkin_LIBRARIES})
 target_link_libraries(demo_topic_subscriber ${catkin_LIBRARIES})
+target_link_libraries(demo_msg_publisher ${catkin_LIBRARIES})
+target_link_libraries(demo_msg_subscriber ${catkin_LIBRARIES})
+target_link_libraries(demo_service_client ${catkin_LIBRARIES})
+target_link_libraries(demo_service_server ${catkin_LIBRARIES})
+target_link_libraries(demo_action_client ${catkin_LIBRARIES})
+target_link_libraries(demo_action_server ${catkin_LIBRARIES})
 
 #############
 ## Install ##
