@@ -2,7 +2,9 @@
 
 | # | Pkgs | Info |
 | - | - | - |
-| 1 | [mastering_ros_demo_pkg](./src/mastering_ros_demo_pkg/) | (Caption2) 入门demo, topic, service, action, customed msg/srv/action |
+| 1 | [mastering_ros_demo_pkg](./src/mastering_ros_demo_pkg/) | (Caption 2) 入门demo, topic, service, action, customed msg/srv/action |
+| 2 | [mastering_ros_robot_description_pkg](./src/mastering_ros_robot_description_pkg/) | (Caption 3) 介绍URDF和xacro使用方法，加入diff_wheeled和seven_dof_arm两种机器人 |
+| 3 | [gazebo_demo_pkg](./src/gazebo_demo_pkg/) | (Caption 4) gazebo仿真环境中使用上述两种机器人，并使用Controller Manager对仿真的hardwareInterface接口进行控制，[Controller Manager工作原理理解请见notes.md](./notes.md#controller-manager工作原理)
 
 # 使用方法
 ```bash
@@ -13,6 +15,7 @@ catkin_init_workspace
 # Build if update
 cd katabot/catkin_ws
 catkin_build
+source devel/setup.zsh
 ```
 ## 1 mastering_ros_demo_pkg
 ```bash
@@ -54,9 +57,25 @@ xacro seven_dof_arm.xacro > seven_dof_arm.urdf
 # arm view Launch
 rosluanch mastering_ros_robot_description_pkg view_arm.launch
 ```
-### diff mobile robot
+### diff wheeled
 ```bash
 # diff mobile robot view Launch
 roslaunch mastering_ros_robot_description_pkg view_mobile_robot.launch
 ```
 
+## 3 gazebo_demo_pkg
+### seven dof arm
+```bash
+# Gazebo加载机械臂
+roslaunch gazebo_demo_pkg seven_dof_arm_world.launch
+# Gazebo加载机械臂, 并在上方生成一个相机
+roslaunch gazebo_demo_pkg seven_dof_arm_with_rgbd_world.launch
+rosrun image_view image_view image:=/rgbd_camera/depth/image_raw  # 新界面查看图像信息
+rviz
+# Gazebo加载机械臂, 并加载Controller Manager配置文件, 可对每个关节进行位控
+roslaunch gazebo_demo_pkg gazebo_demo_pkg_control.launch
+rostopic list  # 可以看到/seven_dof_arm/joint*_position_controller/command
+rostopic pub /seven_dof_arm/joint4_position_controller/command std_msgs/Float64 "1.0"  # 向其发送指令
+```
+
+### diff wheeled

@@ -3,9 +3,8 @@
 
 <robot name="seven_dof_arm" xmlns:xacro="http://ros.org/wiki/xacro">
 
-
-  <!-- Include materials -->
-
+	 <!-- Include materials -->
+	 <xacro:include filename="$(find mastering_ros_robot_description_pkg)/urdf/sensors/xtion_pro_live.urdf.xacro"/>
     <material name="Black">
         <color rgba="0.0 0.0 0.0 1.0"/>
     </material>
@@ -137,7 +136,7 @@ This link is the base of the arm in which arm is placed
       <geometry>
 	       <box size="1 1 0.02" />
       </geometry>
-    </collision>
+      </collision>
 
   </link>
 
@@ -168,7 +167,7 @@ This link is the base of the arm in which arm is placed
 	       <box size="0.1 0.1 0.1" />
 		
       </geometry>
-    </collision>
+      </collision>
 	<xacro:inertial_matrix mass="1"/>
 
   </link>
@@ -231,9 +230,7 @@ This link is the base of the arm in which arm is placed
     <visual>
       <origin xyz="-0.002 0 0.04" rpy="0 ${M_PI/2} 0" />
       <geometry>
-
            <box size="${shoulder_pitch_len} ${shoulder_pitch_width} ${shoulder_pitch_height}" />
-
       </geometry>
       <material name="White" />
     </visual>
@@ -300,13 +297,10 @@ This link is the base of the arm in which arm is placed
 
   <!-- ELBOW PITCH LINK -->
   <link name="elbow_pitch_link" >
-
     <visual>
       <origin xyz="0 0 -0.12" rpy="0 ${M_PI/2} 0" />
       <geometry>
-
        <box size="${elbow_pitch_len} ${elbow_pitch_width} ${elbow_pitch_height}" />
-	
       </geometry>
       <material name="Red" />
     </visual>
@@ -402,10 +396,7 @@ This link is the base of the arm in which arm is placed
     <child link="gripper_roll_link"/>
     <origin xyz="0 0 0.080" rpy="${1.5*M_PI} -${.5*M_PI} 0" />
     <axis xyz="1 0 0" />
-    <!--
-		<limit effort="300" velocity="1" lower="-2.61799387799" upper="2.6128806087" />
-		-->
-		<limit effort="300" velocity="1" lower="-3.14" upper="3.14" />
+    <limit effort="300" velocity="1" lower="-2.61799387799" upper="2.6128806087" />
     <dynamics damping="50" friction="1"/>
   </joint>
 
@@ -449,10 +440,10 @@ This link is the base of the arm in which arm is placed
       <limit effort="100" lower="0" upper="0.03" velocity="1.0"/>
 
 
-      <!-- <safety_controller k_position="20"
+      <safety_controller k_position="20"
                          k_velocity="20"
                          soft_lower_limit="${-0.15 }"
-                         soft_upper_limit="${ 0.0 }"/> -->
+                         soft_upper_limit="${ 0.0 }"/>
 
 
     <dynamics damping="50" friction="1"/>
@@ -490,21 +481,17 @@ This link is the base of the arm in which arm is placed
     <axis xyz="0 1 0" />
     <limit effort="1" lower="-0.03" upper="0" velocity="1.0"/>
 
-<!--    <mimic joint="gripper_finger_joint" multiplier="-1.0" offset="0.0" /> -->
-
     <dynamics damping="50" friction="1"/>
   </joint> 
 
-<!-- ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////// -->
+	<!-- ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////// -->
 
   <!-- RIGHT GRIPPER AFT LINK -->
-
-
   <link name="gripper_finger_link2">
     <visual>
       <origin xyz="0.04 0.03 0"/>
       <geometry>
-      	<box size="${right_gripper_len} ${right_gripper_width} ${right_gripper_height}" />
+          <box size="${right_gripper_len} ${right_gripper_width} ${right_gripper_height}" />
       </geometry>
       <material name="White" />
     </visual>
@@ -515,54 +502,31 @@ This link is the base of the arm in which arm is placed
     <material>Gazebo/White</material>
   </gazebo>
 
-
-	
-    <!-- Grasping frame -->
-    <link name="grasping_frame">
-
-      <inertial>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <mass value="0.0001"/>
-        <cuboid_inertia mass="0.0001" x="0.001" y="0.001" z="0.001"/>
-        <inertia  ixx="1.0" ixy="0.0"  ixz="0.0"  iyy="100.0"  iyz="0.0"  izz="1.0" />
-
-      </inertial>
-
-    <visual>
-      <origin xyz="0 0 0"/>
-      <geometry>
-					
-          <box size="${grasp_frame_len} ${grasp_frame_width} ${grasp_frame_height}" />
-					
-      </geometry>
-      <material name="White" />
-    </visual>
-
-    </link>
-	
-    <joint name="grasping_frame_joint" type="fixed">
-      <parent link="gripper_roll_link"/>
-      <child link="grasping_frame"/>
-      <origin xyz="0.08 0 0" rpy="0 0 0"/>
-    </joint>
-		
+  <!-- Define RGB-D sensor -->  
+  <xacro:xtion_pro_live name="rgbd_camera" parent="base">
+    <origin xyz="0.1 0.0 0.9" rpy="${0.0 * deg_to_rad} ${70.0 * deg_to_rad} ${0.0 * deg_to_rad}"/>
+    <origin xyz="0 0 0" rpy="${-90 * deg_to_rad} ${0 * deg_to_rad} ${-90 * deg_to_rad}" />
+  </xacro:xtion_pro_live>
 
 
 
-<!-- ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////// -->
-  <!-- Transmissions for ROS Control -->
 
-   <xacro:transmission_block joint_name="shoulder_pan_joint"/>
-   <xacro:transmission_block joint_name="shoulder_pitch_joint"/>
-   <xacro:transmission_block joint_name="elbow_roll_joint"/>
-   <xacro:transmission_block joint_name="elbow_pitch_joint"/>
-   <xacro:transmission_block joint_name="wrist_roll_joint"/>
-   <xacro:transmission_block joint_name="wrist_pitch_joint"/>
-   <xacro:transmission_block joint_name="gripper_roll_joint"/>
-   <xacro:transmission_block joint_name="finger_joint1"/>
-   <xacro:transmission_block joint_name="finger_joint2"/>
-	
- <!-- ros_control plugin -->
+	<!-- Transmissions for ROS Control -->
+	<xacro:transmission_block joint_name="shoulder_pan_joint"/>
+	<xacro:transmission_block joint_name="shoulder_pitch_joint"/>
+	<xacro:transmission_block joint_name="elbow_roll_joint"/>
+	<xacro:transmission_block joint_name="elbow_pitch_joint"/>
+	<xacro:transmission_block joint_name="wrist_roll_joint"/>
+	<xacro:transmission_block joint_name="wrist_pitch_joint"/>
+	<xacro:transmission_block joint_name="gripper_roll_joint"/>
+	<xacro:transmission_block joint_name="finger_joint1"/>
+	<xacro:transmission_block joint_name="finger_joint2"/>
+
+
+
+
+
+  <!-- ros_control plugin -->
   <gazebo>
     <plugin name="gazebo_ros_control" filename="libgazebo_ros_control.so">
       <robotNamespace>/seven_dof_arm</robotNamespace>

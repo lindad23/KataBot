@@ -1,0 +1,19 @@
+<launch>
+    <rosparam file="$(find gazebo_demo_pkg)/config/seven_dof_arm/seven_dof_arm_gazebo_pid.yaml" command="load"/>
+    <include file="$(find gazebo_demo_pkg)/launch/seven_dof_arm_world.launch"/>
+    <rosparam file="$(find gazebo_demo_pkg)/config/seven_dof_arm/seven_dof_arm_controller.yaml" command="load"/>
+    <node name="controller_spawner" pkg="controller_manager" type="spawner" output="screen"
+    ns="/seven_dof_arm" args="
+        joint_state_controller
+        joint1_position_controller
+        joint2_position_controller
+        joint3_position_controller
+        joint4_position_controller
+        joint5_position_controller
+        joint6_position_controller
+        joint7_position_controller
+    "/>
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <remap from="/joint_states" to="/seven_dof_arm/joint_states"/>
+    </node>
+</launch>
