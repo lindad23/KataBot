@@ -28,5 +28,35 @@ rosrun mastering_ros_demo_pkg demo_service_client
 # Action
 rosrun mastering_ros_demo_pkg demo_action_server 100
 rosrun mastering_ros_demo_pkg demo_action_client 90 1.0
+# Launch
+roslaunch mastering_ros_demo_pkg demo_topic.launch
+```
+
+## 2 mastering_ros_robot_description_pkg
+### pan tilt
+```bash
+# check urdf
+sudo apt install liburdfdom-tools
+# show urdf struct
+check_urdf pan_tilt.urdf
+urdf_to_graphiz pan_tilt.urdf
+# pan_tilt launch
+roslaunch mastering_ros_robot_description_pkg view_demo.launch
+```
+### seven dof arm
+```bash
+# 将xacro转为URDF
+# In CMD
+xacro seven_dof_arm.xacro > seven_dof_arm.urdf
+# In Launch
+<param name="robot_description" command="$(find xacro)/xacro $(find mastering_ros_robot_description_pkg)/urdf/seven_dof_arm.xacro" />
+
+# arm view Launch
+rosluanch mastering_ros_robot_description_pkg view_arm.launch
+```
+### diff mobile robot
+```bash
+# diff mobile robot view Launch
+roslaunch mastering_ros_robot_description_pkg view_mobile_robot.launch
 ```
 

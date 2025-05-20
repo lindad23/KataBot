@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<robot name="pan_tilt">
+    <link name="base_link">
+        <visual>
+            <geometry>
+                <cylinder radius="0.2" length="0.01"/>
+            </geometry>
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+            <material name="yellow">
+                <color rgba="1 1 0 1"/>
+            </material>
+        </visual>
+    </link>
+    <joint name="pan_joint" type="revolute">
+        <parent link="base_link"/>
+        <child link="pan_link"/>
+        <origin xyz="0.0 0.0 0.1" rpy="0.0 0.0 0.0"/>
+        <axis xyz="0.0 0.0 1.0"/>
+        <limit lower="-3.14" upper="3.14" effort="300" velocity="0.1"/>
+    </joint>
+    <link name="pan_link">
+        <visual>
+            <geometry>
+                <cylinder radius="0.04" length="0.4"/>
+            </geometry>
+            <origin xyz="0.0 0.0 0.09" rpy="0.0 0.0 0.0"/>
+            <material name="red">
+                <color rgba="0.0 0.0 1.0 1.0"/>
+            </material>
+        </visual>
+    </link>
+    <joint name="tilt_joint" type="revolute">
+        <parent link="pan_link"/>
+        <child link="tilt_link"/>
+        <origin xyz="0.0 0.0 0.2" rpy="0.0 0.0 0.0"/>
+        <axis xyz="0.0 1.0 0.0"/>
+        <limit lower="-4.64" upper="-1.5" effort="300" velocity="0.1"/>
+    </joint>
+    <link name="tilt_link">
+        <visual>
+            <geometry>
+                <cylinder radius="0.04" length="0.4"/>
+            </geometry>
+            <origin xyz="0.0 0.0 0.0" rpy="0.0 1.5 0.0"/>
+            <material name="green">
+                <color rgba="0.0 1.0 0.0 1.0"/>
+            </material>
+        </visual>
+    </link>
+</robot>
