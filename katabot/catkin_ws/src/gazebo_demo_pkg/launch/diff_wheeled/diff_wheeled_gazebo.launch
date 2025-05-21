@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="use_keyboard" default="true"/>
+    <arg name="use_joystick" default="true"/>
+    <arg name="paused" default="false"/>
+    <arg name="use_sim_time" default="true"/>
+    <arg name="gui" default="true"/>
+    <arg name="headless" default="false"/>
+    <arg name="debug" default="false"/>
+
+    <include file="$(find gazebo_ros)/launch/empty_world.launch">
+        <arg name="paused" value="$(arg paused)"/>
+        <arg name="use_sim_time" value="$(arg use_sim_time)"/>
+        <arg name="gui" value="$(arg gui)"/>
+        <arg name="headless" value="$(arg headless)"/>
+        <arg name="debug" value="$(arg debug)"/>
+    </include>
+    
+    <param name="diff_wheeled/robot_description" command="$(find xacro)/xacro $(find mastering_ros_robot_description_pkg)/urdf/diff_wheeled_robot.xacro" />
+    <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" output="screen" args="-urdf -model diff_wheeled_robot -param diff_wheeled/robot_description" />
+    <group if="$(arg use_keyboard)">
+        <node name="teleop_twist_keyboard" pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" output="screen" args="/cmd_vel:=/diff_wheeled/cmd_vel"/>
+    </group>
+    <group if="$(arg use_joystick)">
+        <include file="$(find gazebo_demo_pkg)/launch/diff_wheeled/joystick.launch">
+            <arg name="cmd_vel_topic" value="/diff_wheeled/cmd_vel"/>
+        </include>
+    </group>
+    <group ns="diff_wheeled">
+        <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen"/>
+    </group>
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find gazebo_demo_pkg)/config/diff_wheeled/cfg.rviz" output="screen" required="true"/>
+</launch>

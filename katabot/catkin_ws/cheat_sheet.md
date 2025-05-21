@@ -21,18 +21,40 @@
 
 **include**：启动另一个`launch`文件，包含如下属性：
 - `file`：要启动的`launch`文件路径
-- 支持子标签：可以通过子标签`arg`覆盖该`launch`文件的内部参数
+---
+包含子标签：
+- `arg`：覆盖该`launch`文件的内部参数
 ```xml
 <include file="$(find gazebo_ros)/launch/empty_world.launch">
     <arg name="debug" value="$(arg debug)"/>
 </include>
 ```
 
-**node**：启动一个节点文件`src`或`script`，包含如下属性：
+**node**：等价于用`rosrun`启动一个节点文件`src`或`script`，包含如下属性：
 - `name, pkg, type`基础三个属性：名称，所属包，二进制/脚本程序名称`<node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model"/>`
 - `output`：控制输出显示位置，`output="screen"`或`"log"`，显示在屏幕（用于DEBUG）或日志文件（默认在`~/.ros/log/`）
 - `respawn`：节点结束后是否自动重启，`respawn="false"`（默认为`"false"`）
 - `respawn_delay`：设置重启延迟（单位：秒），`respawn_delay="5"`（默认为`"0.0"`）
 - `required`：节点退出时是否终止整个`roslaunch`，`required="false"`（默认为`"false"`）
 - `ns`：命名空间，把这个节点的所有名称（topic, service, param）都放到这个命名空间下
+- `args`：CLI启动程序后加的参数
+---
+包含子标签：
+- `remap`：`<remap from="原始名称" to="目标名称"/>`，支持对topic, service, action的发布/订阅映射
 
+**group**：用于组织命名空间和条件控制，可以对内部的子标签`<node>, <include>, <param>`进行统一控制，包含如下属性：
+- `if`：`<group if="$(use_keyboard)">`只有当条件为`true`时，执行内部内容（大小写敏感）
+- `unless`：`<group unless="$(not_use_keyboard)">`只有当条件为`false`时，执行内部内容（大小写敏感）
+- `ns`：`<group ns="robot1">`将该group内的所有产生的Node, Topic, Service, Param等都加入该命名空间下（路径前缀）
+
+## 常用DEBUG可视化工具
+### Topic
+可以对node, topic进行可视化，易于理解调用关系
+```bash
+rosrun rqt_graph rqt_graph
+```
+### TF
+查看由`robot_state_publisher`通过`joint_state`（topic）和`robot_description`（param）创建的TF关系树
+```bash
+rosrun rqt_tf_tree rqt_tf_tree
+```

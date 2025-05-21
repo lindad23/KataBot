@@ -1,0 +1,15 @@
+# joy_node配置
+joy_node:
+  device_id: 0
+  deadzone: 0.05
+  autoreeat_rate: 20.0
+
+# 修改teleop_twist配置参数到手柄对应按键上, 控制小车, 手柄为xbox series
+teleop_joy_node:
+  axis_linear: 1  # 左摇杆的 X 轴（前后方向）
+  
+  axis_angular: 2  # 右摇杆的 Y 轴（左右方向）
+
+  # 设置启动小车要一直按下的按钮
+  enable_button: 5  # 启动的按钮 右上角LB
+  enable_turbo_button: 7  # 启动涡轮加速的按钮 左上角RB

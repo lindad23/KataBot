@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="cmd_vel_topic" default="/diff_wheeled/diff_drive_controller/cmd_vel"/>
+    <rosparam file="$(find gazebo_demo_pkg)/config/diff_wheeled/xbox_joystick.yaml" command="load"/>
+    <node name="joy_node" pkg="joy" type="joy_node" output="screen"/>
+    <node name="teleop_joy_node" pkg="teleop_twist_joy" type="teleop_node" output="screen"
+        args="/cmd_vel:=$(arg cmd_vel_topic)"/>
+</launch>

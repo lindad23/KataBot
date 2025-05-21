@@ -79,3 +79,21 @@ rostopic pub /seven_dof_arm/joint4_position_controller/command std_msgs/Float64 
 ```
 
 ### diff wheeled
+```bash
+# 安装 teleop-twist-keyboard, teleop-twist-joy 用来控制小车
+sudo apt-get install ros-noetic-teleop-twist-keyboard
+sudo apt install ros-noetic-teleop-twist-joy
+```
+启动joystick控制的launch文件写在了[joystick.launch](./src/gazebo_demo_pkg/launch/diff_wheeled/joystick.launch)，分别启动joy_node和teleop_joy_node，并将对应的配置文件写在[xbox_joystick.yaml](./src/gazebo_demo_pkg/config/diff_wheeled/xbox_joystick.yaml)中
+
+这里有两个控制小车的版本：
+
+第一个是用`libgazebo_ros_diff_drive`直接控制小车（[URDF中插件使用方法](./src/mastering_ros_robot_description_pkg/urdf/diff_wheeled_robot.xacro#198)），无需Controller Manager，但是和真机控制不一致，但是启动简单，直接对`/cmd_vel`发送twist指令即可
+```bash
+roslaunch gazebo_demo_pkg diff_wheeled_gazebo.launch use_keyboard:=true use_joystick:=true
+```
+
+第二个是用`gazebo_ros_controller`仿真小车的硬件接口`hardwareInterface::VelocityJointInterface`（PID系数配置文件位于[diff_wheeled_gazebo_pid.yaml](./src/gazebo_demo_pkg/config/diff_wheeled/diff_wheeled_gazebo_pid.yaml)），再启动Controller Manager中的`DiffDriveController`来控制小车（需要注意，要将base_frame_id设置为`base_footprint`确保odom是映射到`base_footprint`上，[代码](./src/gazebo_demo_pkg/config/diff_wheeled/diff_wheeled_controller.yaml#15)），由于有命名空间和控制器，控制小车需对`/diff_wheeled/diff_drive_controller/cmd_vel`发送twist指令
+```bash
+roslaunch gazebo_demo_pkg diff_wheeled_gazebo_HW_control.launch use_keyboard:=true use_joystick:=true
+```

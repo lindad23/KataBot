@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="use_keyboard" default="true"/>
+    <arg name="use_joystick" default="true"/>
+    <include file="$(find gazebo_demo_pkg)/launch/diff_wheeled/diff_wheeled_gazebo_HW.launch" />
+    <rosparam file="$(find gazebo_demo_pkg)/config/diff_wheeled/diff_wheeled_controller.yaml" command="load" />
+    <node name="diff_wheeled_controller_spawner" pkg="controller_manager" type="spawner" output="screen" ns="diff_wheeled"
+        args="joint_state_controller diff_drive_controller"/>
+    <group if="$(arg use_keyboard)">
+        <node name="teleop_twist_keyboard" pkg="teleop_twist_keyboard" type="teleop_twist_keyboard.py" output="screen" args="/cmd_vel:=/diff_wheeled/diff_drive_controller/cmd_vel"/>
+    </group>
+    <group if="$(arg use_joystick)">
+        <include file="$(find gazebo_demo_pkg)/launch/diff_wheeled/joystick.launch" />
+    </group>
+    <group ns="diff_wheeled">
+        <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen" />
+    </group>
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find gazebo_demo_pkg)/config/diff_wheeled/cfg.rviz" output="screen" required="true"/>
+</launch>
