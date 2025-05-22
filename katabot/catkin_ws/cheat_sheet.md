@@ -58,3 +58,19 @@ rosrun rqt_graph rqt_graph
 ```bash
 rosrun rqt_tf_tree rqt_tf_tree
 ```
+
+# Moveit!
+为了使Moveit!能够控制真机/仿真，我们需要启动两个控制器：
+1. moveit controller manager，只需加入配置文件`[robot_name]_moveit_controller_manager.launch.xml`
+2. ros controller，需要启动`position_controllers/JointTrajectoryController`控制器，并定义需要控制的joint，以及一些时间限制等
+
+这里总的流程就是：moveit controller manager -> ros controller -> hardwareInterface (Real/Gazebo)
+
+## 配置Moveit控制器
+只需要自定义配置文件`[robot_name]_moveit_controller_manager.launch.xml`（这里`robot_name`是`six_dof_arm`），该launch文件的加载流程如下，其设置的param会在move_group node中自动被加载：
+```bash
+move_group.launch
+  └── includes trajectory_execution.launch.xml
+         └── includes six_dof_arm_moveit_controller_manager.launch.xml
+                 └── sets param moveit_controller_manager
+```

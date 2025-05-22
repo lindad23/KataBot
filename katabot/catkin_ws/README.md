@@ -97,3 +97,11 @@ roslaunch gazebo_demo_pkg diff_wheeled_gazebo.launch use_keyboard:=true use_joys
 ```bash
 roslaunch gazebo_demo_pkg diff_wheeled_gazebo_HW_control.launch use_keyboard:=true use_joystick:=true
 ```
+
+## 4 Moveit
+```bash
+# 安装moveit依赖包
+sudo apt install ros-noetic-moveit ros-noetic-moveit-plugins ros-noetic-moveit-planners
+# 启动rviv可视化规划轨迹
+roslaunch moveit_generated_pkg demo.launch
+```
