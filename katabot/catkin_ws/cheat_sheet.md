@@ -8,6 +8,11 @@
 **arg**：launch脚本内部参数，包含如下属性：
 - `default`：可被覆盖赋值 `<arg name="paused" default="false"/>`，可在CLI中通过`paused:=true`来修改，或者在其他的调用的`<include>`标签中用`<arg name="paused" value="..."/>`来覆盖
 - `value`：不可修改赋值 `<arg name="paused" value="false"/>`，外部传入的值无法对其进行修改
+- `if, unless`：条件判断执行后续赋值
+    ```xml
+    <arg unless="$(arg debug)" name="launch_prefix" value="" />
+    <arg     if="$(arg debug)" name="launch_prefix" value="gdb --ex run --args" />
+    ```
 - 在脚本中可通过`$(arg paused)`来调用
 
 **param**：ROS参数服务器键值对，包含如下属性
@@ -15,6 +20,10 @@
 - `command`：命令行返回值赋值 `<param name="robot_description" command="$(find xacro)/xacro $(find mastering_ros_robot_description_pkg)/urdf/seven_dof_arm.xacro" />`
 - `textfile`：文件读取赋值 `<param name="robot_description" textfile="$(find mastering_ros_robot_description_pkg)/urdf/pan_tilt.urdf" />`
 - `value`：直接赋值 `<param name="max_speed" value="2.0"/>`
+- `if, unless`：条件判断进行参数创建
+    ```xml
+    <param if="$(arg load_robot_description)" name="$(arg robot_description)" command="xacro  '$(find mastering_ros_robot_description_pkg)/urdf/seven_dof_arm.xacro'"/>
+    ```
 ---
 - `rosparam`读取`yaml`赋值：`<rosparam file="$(find my_pkg)/config/my_params.yaml" command="load">`
 - 可被`rosparam`, `NodeHandle::getParma()`获取
@@ -59,18 +68,3 @@ rosrun rqt_graph rqt_graph
 rosrun rqt_tf_tree rqt_tf_tree
 ```
 
-# Moveit!
-为了使Moveit!能够控制真机/仿真，我们需要启动两个控制器：
-1. moveit controller manager，只需加入配置文件`[robot_name]_moveit_controller_manager.launch.xml`
-2. ros controller，需要启动`position_controllers/JointTrajectoryController`控制器，并定义需要控制的joint，以及一些时间限制等
-
-这里总的流程就是：moveit controller manager -> ros controller -> hardwareInterface (Real/Gazebo)
-
-## 配置Moveit控制器
-只需要自定义配置文件`[robot_name]_moveit_controller_manager.launch.xml`（这里`robot_name`是`six_dof_arm`），该launch文件的加载流程如下，其设置的param会在move_group node中自动被加载：
-```bash
-move_group.launch
-  └── includes trajectory_execution.launch.xml
-         └── includes six_dof_arm_moveit_controller_manager.launch.xml
-                 └── sets param moveit_controller_manager
-```

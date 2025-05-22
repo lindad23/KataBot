@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+
+<launch>
+    <!-- Launch Gazebo -->
+    <include file="$(find gazebo_demo_pkg)/launch/seven_dof_arm/seven_dof_arm_world.launch"/>
+    
+    <!-- ROS Controller -->
+    <rosparam file="$(find moveit_generated_pkg)/config/ros_controllers.yaml" />
+    <node name="controller_spawner" pkg="controller_manager" type="spawner" output="screen"
+        ns="/seven_dof_arm" args="joint_state_controller trajectory_controller"/>
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" output="screen">
+        <remap from="/joint_states" to="/seven_dof_arm/joint_states"/>
+    </node>
+
+
+    <include file="$(find moveit_generated_pkg)/launch/planning_context.launch">
+        <arg name="load_robot_description" value="false" />
+    </include>
+
+    <include file="$(find moveit_generated_pkg)/launch/move_group.launch">
+        <arg name="publish_monitored_planning_scene" value="true" />
+    </include>
+
+    <include file="$(find moveit_generated_pkg)/launch/moveit_rviz.launch">
+        <arg name="rviz_config" value="$(find moveit_generated_pkg)/launch/moveit.rviz"/>
+    </include>
+</launch>

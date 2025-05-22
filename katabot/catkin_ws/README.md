@@ -104,4 +104,10 @@ roslaunch gazebo_demo_pkg diff_wheeled_gazebo_HW_control.launch use_keyboard:=tr
 sudo apt install ros-noetic-moveit ros-noetic-moveit-plugins ros-noetic-moveit-planners
 # 启动rviv可视化规划轨迹
 roslaunch moveit_generated_pkg demo.launch
+# 安装trajectory controller
+sudo apt install ros-noetic-joint-trajectory-controller
+# 启动gazebo仿真控制
+roslaunch gazebo_demo_pkg seven_dof_arm_bringup_moveit.launch
 ```
+
+https://github.com/user-attachments/assets/65656929-00e0-4dbc-9a7a-b05efd844c55
