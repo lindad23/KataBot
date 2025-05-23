@@ -11,8 +11,8 @@ PATH_VIDEO_DIR.mkdir(parents=True, exist_ok=True)
 def detect_and_draw_axis_relative_to_base_coord(
         Camera=D435iCamera, width=1280, height=720, fps=30,
         base_frame_idx=0, use_depth=False, save=False,
-        show_pos_err=None, interval_size=0.052, grid_idxs: np.ndarray=None,
-        show_depth_err=False, show_pos='rgb'):
+        show_pos_err=[], interval_size=0.052, grid_idxs: np.ndarray=None,
+        show_depth_err=False, show_pos='rgb', tag_size=0.04):
     """ Detect all ApilTags (tag36h11) in the image and display their corner points and frames.
     You can define a base frame, which other frames will use as a reference to calculate relative position.
 
@@ -25,8 +25,9 @@ def detect_and_draw_axis_relative_to_base_coord(
         grid_idxs (np.ndarray | None, optional): The AprilTag indexes in grid, axis-0=x-axis, axis-1=y-axis. Defaults to None.
         show_depth_err (bool, optional): Whether to show center points depth error with rgb result, only if use_depth=True. Defaults to False.
         show_pos ('str', option['rgb', 'depth']): Show position type, rgb or depth. Defaults to rgb.
+        tag_size (float): The size of AprilTags. Defaults to 0.04.
     """
-    if show_pos_err is not None:
+    if len(show_pos_err):
         assert grid_idxs is not None
     axis_colors = [(0,0,255), (0,255,0), (255,0,0)]
     april_tag_detection = AprilTagDetection()
@@ -44,7 +45,8 @@ def detect_and_draw_axis_relative_to_base_coord(
             rgb_img=rgb_img,
             K=camera.K,
             dist=np.array(camera.dist, np.float32),
-            draw_text=False
+            draw_text=False,
+            tag_size=tag_size
         )
         if base_frame_idx in tag_infos:
             base_frame_info = tag_infos[base_frame_idx][0]
@@ -137,5 +139,9 @@ def detect_and_draw_axis_relative_to_base_coord(
 if __name__ == '__main__':
     # grid_idxs = np.fliplr(np.arange(20, dtype=np.int32).reshape(5, 4).T)  # 0~19, 4 rows, 5 cols
     grid_idxs = np.fliplr(np.arange(6, 15, dtype=np.int32).reshape(3, 3).T)  # 6~14, 3 rows, 3 cols
-    detect_and_draw_axis_relative_to_base_coord(Camera=D435Camera, base_frame_idx=6, use_depth=False, save=False, show_pos_err=['rgb'], grid_idxs=grid_idxs)
+    # Grid error debug
+    # detect_and_draw_axis_relative_to_base_coord(Camera=D435Camera, fps=15, base_frame_idx=6, use_depth=False, save=True, show_pos_err=['rgb'], grid_idxs=grid_idxs)
+    # Without Grid
+    detect_and_draw_axis_relative_to_base_coord(Camera=D435Camera, fps=15, base_frame_idx=11, use_depth=False, save=True, tag_size=0.05)
+
     # detect_and_draw_axis_relative_to_base_coord(use_depth=True, save=True, show_pos_err=['rgb', 'depth'], grid_idxs=grid_idxs, show_depth_err=True, show_pos='depth')
