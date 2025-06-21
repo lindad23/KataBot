@@ -27,10 +27,29 @@ class D435iDataCollector:
                 cv2.imwrite(filename, rgb_img)
                 print(f"Saved {filename}")
         cv2.destroyAllWindows()
+        
+    def collect_video(self, total_samples: int = math.inf):
+        i = 0
+        width, height, fps = self.camera.width, self.camera.height, self.camera.fps
+        path_video = str(path_collect_dir / "output.avi")
+        writer = cv2.VideoWriter(str(path_video), cv2.VideoWriter_fourcc(*'XVID'), fps=fps, frameSize=(width, height))
+        while i < total_samples:
+            i += 1
+            rgb_img, depth_img = self.camera.get_frame()
+            cv2.imshow("RGB Image", rgb_img)
+            key = cv2.waitKey(1)
+            writer.write(rgb_img)
+            if key == ord('q'):
+                print("Press 'q' quiting.")
+                break
+        writer.release()
+        cv2.destroyAllWindows()
 
 if __name__ == "__main__":
     fps = 30
-    camera = D435iCamera(width=1280, height=720, fps=fps, enable_rgb=True, enable_depth=True)
+    # camera = D435iCamera(width=1280, height=720, fps=fps, enable_rgb=True, enable_depth=True)
+    camera = D435iCamera(width=1920, height=1080, fps=fps, enable_rgb=True, enable_depth=True)
     collector = D435iDataCollector(camera)
-    collector.collect_data(save_interval=fps)
+    # collector.collect_data(save_interval=fps//2)
+    collector.collect_video()
     camera.close()

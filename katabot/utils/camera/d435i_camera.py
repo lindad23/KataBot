@@ -9,6 +9,7 @@ class D435iCamera:
     }
 
     def __init__(self, width=1920, height=1080, fps=30, **kwargs):
+        self.fps = fps
         self.width, self.height = width, height
         self.pipeline = rs.pipeline()
         self.config = rs.config()
