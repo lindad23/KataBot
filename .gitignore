@@ -7,3 +7,22 @@ logs
 # ROS
 build
 devel
+
+# Model
+*.pt
+
+# Figure
+*.jpg
+*.png
+
+# Data
+*.txt
+*.cache
+*.json
+*.xml
+*.avi
+datasets
+
+# Logs
+yolo_dataset
+runs

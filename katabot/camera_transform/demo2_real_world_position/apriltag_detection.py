@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
-# from katabot.camera_transform.demo2_real_world_position import D435iCamera as Camera
-from katabot.camera_transform.demo2_real_world_position import D435Camera as Camera
+from katabot.camera_transform.demo2_real_world_position import D435iCamera as Camera
+# from katabot.camera_transform.demo2_real_world_position import D435Camera as Camera
 from pupil_apriltags import Detector, Detection
 
 special_tag_size = {
@@ -21,9 +21,6 @@ def get_extrinsics_matrix_pnp(xs_img: np.ndarray, xs_world: np.ndarray, K: np.nd
 
     """
     assert len(xs_img) == len(xs_world) and len(xs_img) >= 4
-    if len(xs_img) > 4:  # PnP need 4 input points
-        xs_img = xs_img[:4]
-        xs_world = xs_world[:4]
     _, R, T = cv2.solvePnP(
         xs_world, xs_img, K, distCoeffs=dist,
         flags=cv2.SOLVEPNP_ITERATIVE

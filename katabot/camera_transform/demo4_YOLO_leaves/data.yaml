@@ -1,0 +1,4 @@
+train: train_labels
+val: train_labels  # 这里假设验证集和训练集相同
+nc: 2  # 类别数量
+names: ['zayan', 'qingyan']  # 类别名称

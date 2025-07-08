@@ -142,6 +142,7 @@ if __name__ == '__main__':
     # Grid error debug
     # detect_and_draw_axis_relative_to_base_coord(Camera=D435Camera, fps=15, base_frame_idx=6, use_depth=False, save=True, show_pos_err=['rgb'], grid_idxs=grid_idxs)
     # Without Grid
-    detect_and_draw_axis_relative_to_base_coord(Camera=D435Camera, fps=15, base_frame_idx=11, use_depth=False, save=True, tag_size=0.05)
+    # detect_and_draw_axis_relative_to_base_coord(Camera=D435Camera, fps=15, base_frame_idx=11, use_depth=False, save=True, tag_size=0.04)
+    detect_and_draw_axis_relative_to_base_coord(Camera=D435iCamera, base_frame_idx=11, use_depth=True, save=False, tag_size=0.04, show_pos_err=['rgb', 'depth'], grid_idxs=grid_idxs)
 
     # detect_and_draw_axis_relative_to_base_coord(use_depth=True, save=True, show_pos_err=['rgb', 'depth'], grid_idxs=grid_idxs, show_depth_err=True, show_pos='depth')

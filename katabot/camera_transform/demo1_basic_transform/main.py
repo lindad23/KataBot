@@ -94,9 +94,6 @@ def get_extrinsics_matrix_pnp(x_img: np.ndarray, x_world: np.ndarray, K: np.ndar
 
     """
     assert len(x_img) == len(x_world) and len(x_img) >= 4
-    if len(x_img) > 4:  # PnP need 4 input points
-        x_img = x_img[:4]
-        x_world = x_world[:4]
     _, R, T = cv2.solvePnP(
         x_world.astype(np.float32), x_img.astype(np.float32), K.astype(np.float32), distCoeffs=dist,
         flags=cv2.SOLVEPNP_ITERATIVE  # more stable
@@ -174,6 +171,7 @@ def demo4_get_extrinsics_matrix_oxy():
     print("calc:", R, T); print()
 
 if __name__ == '__main__':
+    # demo1_play_with_graphics()
     demo3_get_extrinsics_matrix_pnp()
     # demo4_get_extrinsics_matrix_oxy()
     # import multiprocessing
