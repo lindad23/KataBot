@@ -18,28 +18,20 @@ class Ros2Interface(Node):
         self.debug_mode = debug_mode
         self.video_file = video_file
 
-        if debug_mode:
-            # 调试模式下，读取视频文件并发布
-            self.video_cap = cv2.VideoCapture(video_file)
-            self.video_pub = self.create_publisher(
-                Image,
-                'input_topic',
-                10
-            )
-            self.timer = self.create_timer(0.1, self.publish_video_frame)
-        else:
-            # 正常模式下，订阅视频流
-            self.video_sub = self.create_subscription(
-                Image,
-                'input_topic',
-                self.listener_callback,
-                10
-            )
+        
+    
+        # 订阅视频流
+        self.video_sub = self.create_subscription(
+            Image,
+            'video_stream',
+            self.listener_callback,
+            10
+        )
 
         # 创建Pause消息发布者
         self.pause_pub = self.create_publisher(
             String,
-            'output_topic',
+            'Pause_command',
             10
         )
 
