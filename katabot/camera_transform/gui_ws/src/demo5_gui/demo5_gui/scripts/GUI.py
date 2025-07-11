@@ -9,59 +9,15 @@ import yaml
 import socket
 import sys
 import numpy as np
+import time
+from pathlib import Path
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from demo5_gui.scripts.constants import SURFACE_CLASSES
 
-class PlayVideoThread(QThread):
-    frame_signal = pyqtSignal(object)
-    time_signal = pyqtSignal(str)
-    progress_signal = pyqtSignal(int)
-    debug_signal = pyqtSignal(list)
-    def __init__(self, gui):
-        super().__init__()
-        self.gui = gui
-        self.thread_running = True
-        # 用于debug的时间点和数据
-        self.debug_times = [1, 3, 5, 8, 10]
-        self.debug_data = [
-            [["top", 1], ["botton", 2], ["right", 1]],
-            [["top", 2], ["botton", 5], ["right", 6]],
-            [["top", 3], ["botton", 5], ["right", 6]],
-            [["top", 4], ["botton", 7], ["right", 8]],
-            [["top", 5], ["botton", 9], ["right", 10]]
-        ]
-        self.debug_index = 0
-        self.start_time = None
-    def run(self):
-        self.start_time = time.time()
-        while self.thread_running:
-            if self.start_time is None:
-                self.start_time = time.time()
-            if self.gui.current_frame is not None:
-                self.gui.current_frame_index += 1
-                # 更新进度条
-                self.progress_signal.emit(self.gui.current_frame_index)
-                # 更新时间显示
-                elapsed_seconds = time.time() - self.start_time
-                current_time_str = time.strftime('%M:%S', time.gmtime(elapsed_seconds))
-                self.time_signal.emit(current_time_str)
-                # 检查是否到达debug时间点
-                if self.debug_index < len(self.debug_times) and elapsed_seconds >= self.debug_times[self.debug_index]:
-                    self.debug_signal.emit(self.debug_data[self.debug_index])
-                    self.gui.screw_info.append(self.debug_data[self.debug_index])
-                    self.debug_index += 1
-                # 发送当前帧信号
-                self.frame_signal.emit(self.gui.current_frame)
-                # 录制视频
-                if self.gui.recording:
-                    if self.gui.out is None:
-                        self.gui.init_video_writer()
-                    self.gui.out.write(self.gui.current_frame)
-            # 控制播放速度
-            time.sleep(self.gui.frame_delay / 1000)
-    def stop(self):
-        self.thread_running = False
-        self.wait()
+# define log path
+PATH_LOGS = Path(__file__).parents[1] / "logs"
+PATH_LOGS.mkdir(parents=True, exist_ok=True)
+
 
 class GUI(QWidget):
     def __init__(self, send_pause_command):
@@ -80,7 +36,8 @@ class GUI(QWidget):
         self.screw_info = []
         # 线程变量
         self.play_thread = None
-        self.save_thread = None
+        self.load_video_stream()  # 加载视频流
+
 
     def initUI(self):
         self.setWindowTitle("Camera Transform GUI")
@@ -106,9 +63,10 @@ class GUI(QWidget):
         calculate_layout = QVBoxLayout()
         # 上部分六个框，3*2布局
         top_part = QGridLayout()
-        self.names = ["top", "botton", "front", "back", "left", "right"]
+        self.names = ["top", "bottom", "front", "back", "left", "right"]
+        self.screw_types = ["screw1", "screw2", "screw3", "screw4"]
         self.labels = {}
-        self.max_crew = {name: 0 for name in self.names}
+        self.max_crew = {name: {screw: 0 for screw in self.screw_types} for name in self.names}
         # 定义字体大小
         font_size = 12
         # 定义边框样式
@@ -126,20 +84,24 @@ class GUI(QWidget):
             name_label.setAlignment(Qt.AlignCenter)
             name_label.setStyleSheet(f"font-size: {font_size}px;")
             layout.addWidget(name_label)
-            crew_label = QLabel(f"have max crew:0", self)
-            crew_label.setAlignment(Qt.AlignCenter)
-            crew_label.setStyleSheet(f"font-size: {font_size}px;")
-            layout.addWidget(crew_label)
+            # 修改显示标签，显示每种螺丝的数量
+            crew_labels = {}
+            for screw in self.screw_types:
+                crew_label = QLabel(f"{screw}: 0", self)
+                crew_label.setAlignment(Qt.AlignCenter)
+                crew_label.setStyleSheet(f"font-size: {font_size}px;")
+                layout.addWidget(crew_label)
+                crew_labels[screw] = crew_label
             top_part.addWidget(frame, row, col)
-            self.labels[name] = crew_label
+            self.labels[name] = crew_labels
         # 下部分按钮
         bottom_part = QVBoxLayout()
-        self.start_record_button = QPushButton("开始录制", self)
-        self.start_record_button.clicked.connect(self.start_recording)
-        bottom_part.addWidget(self.start_record_button)
-        self.stop_record_button = QPushButton("停止录制", self)
-        self.stop_record_button.clicked.connect(self.stop_recording)
-        bottom_part.addWidget(self.stop_record_button)
+        # self.start_record_button = QPushButton("开始录制", self)
+        # self.start_record_button.clicked.connect(self.start_recording)
+        # bottom_part.addWidget(self.start_record_button)
+        # self.stop_record_button = QPushButton("停止录制", self)
+        # self.stop_record_button.clicked.connect(self.stop_recording)
+        # bottom_part.addWidget(self.stop_record_button)
         self.save_button = QPushButton("保存视频", self)
         self.save_button.clicked.connect(self.save_video)
         bottom_part.addWidget(self.save_button)
@@ -174,7 +136,7 @@ class GUI(QWidget):
             self.play_thread.time_signal.connect(self.update_time_label)
             self.play_thread.progress_signal.connect(self.update_progress_bar)
             self.play_thread.debug_signal.connect(self.calcu_crew)
-            self.play_thread.start()
+            self.play_thread.run()
 
     def display_frame(self, frame):
         """显示当前帧"""
@@ -214,23 +176,16 @@ class GUI(QWidget):
 
     def init_video_writer(self):
         """初始化视频写入对象"""
+        path_video = PATH_LOGS / (time.strftime("%Y%m%d_%H%M%S") + "_test.mp4")
+        USE_MP4V = False
         if self.current_frame is not None:
             height, width, _ = self.current_frame.shape
-            fourcc = cv2.VideoWriter_fourcc(*'XVID')
-            self.out = cv2.VideoWriter('temp.avi', fourcc, 20.0, (width, height))
-
-    def start_recording(self):
-        """开始录制视频"""
-        self.recording = True
-        if self.out is None:
-            self.init_video_writer()
-
-    def stop_recording(self):
-        """停止录制视频"""
-        self.recording = False
-        if self.out:
-            self.out.release()
-            self.out = None
+            if USE_MP4V:  # 文件更小, 如果创建过程中中止可能出现花屏
+                self.out = cv2.VideoWriter(str(path_video), cv2.VideoWriter_fourcc(*'mp4v'), 30.0, (width, height))
+            else:  # 文件稍微大, 如果创建过程中中止不会出现问题
+                path_video = path_video.with_suffix('.avi')  # 使用avi格式
+                self.out = cv2.VideoWriter(str(path_video), cv2.VideoWriter_fourcc(*'XVID'), 30.0, (width, height))
+        self.temp_video_path = path_video
 
     def save_video(self):
         """保存视频和螺丝信息"""
@@ -238,32 +193,29 @@ class GUI(QWidget):
             self.toggle_play()  # 暂停视频播放
         if self.recording:
             self.stop_recording()
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        video_name = "ros_video"
-        video_path = os.path.join(script_dir, f"{video_name}_output.avi")
-        yaml_path = os.path.join(script_dir, f"{video_name}_output.yaml")
-        # 检查临时文件是否存在
-        if not os.path.exists('temp.avi'):
-            QMessageBox.warning(self, "保存失败", "未录制视频，没有临时视频文件。")
-            return
-        self.save_thread = threading.Thread(target=self.save_files, args=(video_path, yaml_path))
-        self.save_thread.daemon = True
-        self.save_thread.start()
+        yaml_path = PATH_LOGS / (time.strftime("%Y%m%d_%H%M%S") + "_crew_info.yaml")
+        
+        self.out.release()  # 释放视频写入对象
+
+        # 将数据列表转换为字典
+        crew_info = {name: {screw: count for screw, count in screw_counts.items()} for name, screw_counts in self.max_crew.items()}
+        
+        # 写入YAML文件
+        with open(yaml_path, 'w', encoding='utf-8') as f:
+            yaml.dump(crew_info, f, allow_unicode=True, default_flow_style=False)
+
+        print(f"螺丝信息已成功保存到: {yaml_path}")
+
 
     def save_files(self, video_path, yaml_path):
-        try:
-            # 保存视频
-            if os.path.exists('temp.avi'):
-                os.replace('temp.avi', video_path)
-            # 只保存最后的螺丝信息
-            if self.screw_info:
-                last_screw_info = self.screw_info[-1]
-                with open(yaml_path, 'w') as f:
-                    yaml.dump(last_screw_info, f)
-            # 显示消息框
-            QMessageBox.information(self, "保存成功", f"视频已保存到 {video_path}，螺丝信息已保存到 {yaml_path}")
-        except Exception as e:
-            QMessageBox.warning(self, "保存失败", f"保存文件时出现错误: {str(e)}")
+         
+        # 只保存最后的螺丝信息
+        if self.screw_info:
+            last_screw_info = self.screw_info[-1]
+            with open(yaml_path, 'w') as f:
+                yaml.dump(last_screw_info, f)
+                # 显示消息框
+        QMessageBox.information(self, "保存成功", f"视频已保存到 {video_path}，螺丝信息已保存到 {yaml_path}")
 
     def pause_stream(self):
         """暂停当前视频输入流的接收"""
@@ -273,19 +225,17 @@ class GUI(QWidget):
         print("Pause")
 
     def calcu_crew(self, data):
-        """输入格式: [["top", 1], ["botton", 2], ...]"""
+        """输入格式: [["top", "crew1", 1], ["top", "crew2", 2], ...]"""
         for item in data:
-            name, crew_count = item
-            if name in self.names and crew_count > self.max_crew[name]:
-                self.max_crew[name] = crew_count
-                self.labels[name].setText(f"have max crew:{self.max_crew[name]}")
+            name, screw_type, crew_count = item
+            if name in self.names and screw_type in self.screw_types and crew_count > self.max_crew[name][screw_type]:
+                self.max_crew[name][screw_type] = crew_count
+                self.labels[name][screw_type].setText(f"{screw_type}: {self.max_crew[name][screw_type]}")
 
     def closeEvent(self, event):
         """处理窗口关闭事件"""
         if self.play_thread:
             self.play_thread.stop()
-        if self.save_thread and self.save_thread.is_alive():
-            self.save_thread.join()
         if self.cap:
             self.cap.release()
         if self.out:
@@ -295,20 +245,69 @@ class GUI(QWidget):
 
     # GUI.py 文件
     def set_current_result(self, result):
-        print("Setting current result in GUI")
+        # print("Setting current result in GUI")
         self.current_frame = result['image']  # After rendering
 
-        # 更新螺丝统计信息
-        surface_screw_count = {surface: 0 for surface in SURFACE_CLASSES}
+        # update crews information
+        surface_screw_count = {surface: {crew: 0 for crew in self.screw_types} for surface in SURFACE_CLASSES}
         for part in result['parts']:
             surface = part["on_surface"]
+            crew = part["name"]
             if surface in surface_screw_count:
-                surface_screw_count[surface] += 1
-        screw_info = [[surface, count] for surface, count in surface_screw_count.items()]
+                if crew in surface_screw_count[surface]:
+                    surface_screw_count[surface][crew] += 1
+        screw_info = [[surface, crew, count] for surface, crew_counts in surface_screw_count.items() for crew, count in crew_counts.items()]
         self.calcu_crew(screw_info)
 
         if not self.playing:
-            self.display_frame(cv2.resize(result['image'], (1280, 720)))  # 新增：如果未播放，立即显示帧
+            self.display_frame(cv2.resize(result['image'], (1280, 720))) 
+
+
+class PlayVideoThread(QThread):
+    frame_signal = pyqtSignal(object)
+    time_signal = pyqtSignal(str)
+    progress_signal = pyqtSignal(int)
+    debug_signal = pyqtSignal(list)
+    def __init__(self, gui):
+        super().__init__()
+        self.gui = gui
+        self.thread_running = True
+        # 用于debug的时间点和数据
+        self.debug_times = [1, 3, 5, 8, 10]
+        self.debug_data = [
+            [["top", 1], ["botton", 2], ["right", 1]],
+            [["top", 2], ["botton", 5], ["right", 6]],
+            [["top", 3], ["botton", 5], ["right", 6]],
+            [["top", 4], ["botton", 7], ["right", 8]],
+            [["top", 5], ["botton", 9], ["right", 10]]
+        ]
+        self.debug_index = 0
+        self.start_time = None
+    def run(self):
+        print("Starting video playback thread")
+        self.start_time = time.time()
+        while self.thread_running:
+            if self.start_time is None:
+                self.start_time = time.time()
+            if self.gui.current_frame is not None:
+                print("Writing frame:", self.gui.current_frame_index)  # 添加调试信息
+                self.gui.current_frame_index += 1
+                # 计算当前时间
+                self.debug_index += 1
+                # 发送当前帧信号
+                self.frame_signal.emit(self.gui.current_frame)
+                # 录制视频
+                # if self.gui.recording:
+                if self.gui.out is None:
+                    self.gui.init_video_writer()
+                self.gui.out.write(self.gui.current_frame)
+            # 控制播放速度
+            time.sleep(self.gui.frame_delay / 1000)
+    def stop(self):
+        self.thread_running = False
+        self.wait()
+
+
 
 if __name__ == '__main__':
     def send_pause_command():
