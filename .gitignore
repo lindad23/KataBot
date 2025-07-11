@@ -3,10 +3,12 @@ __pycache__
 test*
 debug*
 logs
+log
 
 # ROS
 build
 devel
+install
 
 # Model
 *.pt
