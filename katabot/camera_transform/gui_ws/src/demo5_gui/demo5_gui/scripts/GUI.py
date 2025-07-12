@@ -207,15 +207,15 @@ class GUI(QWidget):
         print(f"螺丝信息已成功保存到: {yaml_path}")
 
 
-    def save_files(self, video_path, yaml_path):
-         
-        # 只保存最后的螺丝信息
-        if self.screw_info:
-            last_screw_info = self.screw_info[-1]
-            with open(yaml_path, 'w') as f:
-                yaml.dump(last_screw_info, f)
-                # 显示消息框
-        QMessageBox.information(self, "保存成功", f"视频已保存到 {video_path}，螺丝信息已保存到 {yaml_path}")
+    def save_files(self, yaml_path):
+         # 将数据列表转换为字典
+        crew_info = {name: {screw: count for screw, count in screw_counts.items()} for name, screw_counts in self.max_crew.items()}
+        
+        # 写入YAML文件
+        with open(yaml_path, 'w', encoding='utf-8') as f:
+            yaml.dump(crew_info, f, allow_unicode=True, default_flow_style=False)
+
+        print(f"螺丝信息已成功保存到: {yaml_path}")
 
     def pause_stream(self):
         """暂停当前视频输入流的接收"""
@@ -272,16 +272,6 @@ class PlayVideoThread(QThread):
         super().__init__()
         self.gui = gui
         self.thread_running = True
-        # 用于debug的时间点和数据
-        self.debug_times = [1, 3, 5, 8, 10]
-        self.debug_data = [
-            [["top", 1], ["botton", 2], ["right", 1]],
-            [["top", 2], ["botton", 5], ["right", 6]],
-            [["top", 3], ["botton", 5], ["right", 6]],
-            [["top", 4], ["botton", 7], ["right", 8]],
-            [["top", 5], ["botton", 9], ["right", 10]]
-        ]
-        self.debug_index = 0
         self.start_time = None
     def run(self):
         print("Starting video playback thread")
@@ -292,8 +282,6 @@ class PlayVideoThread(QThread):
             if self.gui.current_frame is not None:
                 print("Writing frame:", self.gui.current_frame_index)  # 添加调试信息
                 self.gui.current_frame_index += 1
-                # 计算当前时间
-                self.debug_index += 1
                 # 发送当前帧信号
                 self.frame_signal.emit(self.gui.current_frame)
                 # 录制视频
@@ -301,6 +289,8 @@ class PlayVideoThread(QThread):
                 if self.gui.out is None:
                     self.gui.init_video_writer()
                 self.gui.out.write(self.gui.current_frame)
+                # 自动保存数据
+                self.gui.save_files(yaml_path = PATH_LOGS /  "_crew_info.yaml")
             # 控制播放速度
             time.sleep(self.gui.frame_delay / 1000)
     def stop(self):
